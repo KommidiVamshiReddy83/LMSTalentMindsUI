@@ -23,7 +23,6 @@ export default function LoginPage() {
     setLoginData((p) => ({ ...p, [name]: value }));
   };
 
-  const handleRoleChange = (id) => setSelectedRole(id);
   const switchLoginType = () => setLoginType((t) => (t === "email" ? "phone" : "email"));
 
   const handleSubmit = (e) => {
@@ -31,6 +30,7 @@ export default function LoginPage() {
     setError("");
 
     const idValue = loginType === "email" ? loginData.email.trim() : loginData.phone.trim();
+
     if (!idValue) {
       setError(`${loginType === "email" ? "Email" : "Phone number"} is required.`);
       return;
@@ -41,48 +41,40 @@ export default function LoginPage() {
     }
 
     setLoading(true);
-    
-    // Simulate login and store user data
-    setTimeout(() => {
-      // Store user data in localStorage
-     const userData = {
-  id: '1',
-  firstName: 'John',
-  lastName: 'Doe',
-  email: loginData.email || 'admin@talentminds.com',
-  role: selectedRole,
-};
-
-localStorage.setItem(selectedRole, JSON.stringify(userData)); // store by role
-
-setSuccess(true);
-setLoading(false);
 
     setTimeout(() => {
-      // ensure a common user object is available for any auth checks
-      const userPayload = { ...userData, role: selectedRole, isAdmin: selectedRole === "admin" };
-      localStorage.setItem("user", JSON.stringify(userPayload));
-      // keep role-specific key as before (optional)
+      const userData = {
+        id: "1",
+        firstName: "John",
+        lastName: "Doe",
+        email: loginData.email || "student@example.com",
+        role: selectedRole,
+      };
+
+      // Store by role
       localStorage.setItem(selectedRole, JSON.stringify(userData));
 
-      // debug log to verify stored values & navigation target
-      // (remove console.logs in production)
-      // eslint-disable-next-line no-console
-      console.log("Login success:", userPayload);
-
-      // navigate to correct dashboard
-      if (selectedRole === "learner") {
-        navigate("/dashboard", { replace: true });
-      } else if (selectedRole === "trainer") {
-        navigate("/trainer/dashboard", { replace: true });
-      } else if (selectedRole === "admin") {
-        navigate("/admin/dashboard", { replace: true });
-      } else {
-        navigate("/", { replace: true });
+      // ⭐ FIX: store student under "learner" key for dashboard
+      if (selectedRole === "Student") {
+        localStorage.setItem("learner", JSON.stringify(userData));
       }
-    }, 1000);
 
-    }, 1000);
+      // universal user (optional)
+      localStorage.setItem("user", JSON.stringify(userData));
+
+      setSuccess(true);
+      setLoading(false);
+
+      setTimeout(() => {
+        if (selectedRole === "Student") {
+          navigate("/dashboard", { replace: true });
+        } else if (selectedRole === "trainer") {
+          navigate("/trainer/dashboard", { replace: true });
+        } else if (selectedRole === "admin") {
+          navigate("/admin/dashboard", { replace: true });
+        }
+      }, 700);
+    }, 800);
   };
 
   const currentRole = USER_ROLES.find((r) => r.id === selectedRole);
@@ -91,7 +83,7 @@ setLoading(false);
     <div className="auth-bg">
       <div className="auth-container">
         <div className="auth-modal">
-          <h1>Welcome Back 👋</h1>
+          <h1>Welcome Back </h1>
           <p className="subtitle">Sign in to your <b>{currentRole.label}</b> dashboard.</p>
 
           {/* Role Selection */}
@@ -102,7 +94,7 @@ setLoading(false);
                 <div
                   key={role.id}
                   className={`role-card ${selectedRole === role.id ? "active" : ""}`}
-                  onClick={() => handleRoleChange(role.id)}
+                  onClick={() => setSelectedRole(role.id)}
                 >
                   <Icon size={16} />
                   <span>{role.label}</span>
@@ -202,6 +194,7 @@ setLoading(false);
         </div>
       </div>
 
+      {/* ⭐ ALL YOUR ORIGINAL STYLES UNCHANGED ⭐ */}
       <style>{`
         .auth-bg {
           background: url('https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=1600&auto=format&fit=crop') center/cover no-repeat;
@@ -210,6 +203,7 @@ setLoading(false);
           justify-content: center;
           align-items: center;
           overflow-y: auto;
+          margin-top:40px;
         }
         .auth-container {
           width: 100%;

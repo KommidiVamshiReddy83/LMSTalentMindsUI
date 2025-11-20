@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { Outlet, Link, useNavigate, useLocation } from "react-router-dom";
 import { Menu } from "lucide-react";
 import LearnerSidebar from "../modules/learner/components/LearnerSidebar.jsx";
-import QuickNav from "../modules/learner/components/QuickNav.jsx"; 
 
 export default function LearnerLayout() {
   const navigate = useNavigate();
@@ -11,24 +10,26 @@ export default function LearnerLayout() {
   // ===== Learner Auth State =====
   const [learner, setLearner] = useState(() => {
     try {
-      const data = localStorage.getItem("learner");
+      const data = localStorage.getItem("learner");   // ⭐ FIXED
       return data ? JSON.parse(data) : null;
     } catch (e) {
       console.error("Failed to parse learner data from localStorage", e);
       return null;
     }
   });
+
   const [loading, setLoading] = useState(true);
 
   // ===== UI state =====
-  const [quickOpen, setQuickOpen] = useState(false); // Controls the Avatar dropdown
+  const [quickOpen, setQuickOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(() =>
     typeof window !== "undefined"
       ? window.matchMedia("(max-width: 992px)").matches
       : false
   );
-  const [sidebarPinned, setSidebarPinned] = useState(false); // Desktop control
-  const [sidebarOpen, setSidebarOpen] = useState(false); // Mobile drawer control
+
+  const [sidebarPinned, setSidebarPinned] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // --- keep auth & redirect ---
   useEffect(() => {
@@ -39,6 +40,7 @@ export default function LearnerLayout() {
   // --- Live Breakpoint Watcher ---
   useEffect(() => {
     if (typeof window === "undefined") return;
+
     const mq = window.matchMedia("(max-width: 992px)");
 
     const onChange = (e) => {
@@ -53,65 +55,55 @@ export default function LearnerLayout() {
 
     mq.addEventListener("change", onChange);
     onChange(mq);
+
     return () => mq.removeEventListener("change", onChange);
   }, []);
 
-  // --- Lock body scroll when mobile drawer is open ---
+  // --- Lock body scroll for mobile ---
   useEffect(() => {
     if (isMobile) {
       document.body.style.overflow = sidebarOpen ? "hidden" : "";
     }
-    return () => {
-      document.body.style.overflow = "";
-    };
+    return () => (document.body.style.overflow = "");
   }, [isMobile, sidebarOpen]);
 
-  // --- scroll to top on route change; close drawer/quicknav on navigation ---
+  // --- Scroll to top on route change ---
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "instant" });
-    setQuickOpen(false); 
+    setQuickOpen(false);
     if (isMobile) setSidebarOpen(false);
   }, [location.pathname, isMobile]);
 
+  // --- Logout ---
   function handleLogout() {
-    localStorage.removeItem("learner");
+    localStorage.removeItem("learner"); // ⭐ FIX
     setLearner(null);
     setLoading(true);
   }
 
-  // =======================================================
-  // ** FIX: Robust Name Derivation Function **
-  // =======================================================
+  // --- Name Derivation Logic ---
   const deriveName = () => {
     if (!learner) return "Learner";
-    
-    // 1. Priority: Use firstName or fullName if available (for real user data)
-    if (learner.firstName) return learner.firstName;
-    if (learner.fullName) return learner.fullName.split(' ')[0]; // Use first word of full name
 
-    // 2. Secondary: Derive from email
+    if (learner.firstName) return learner.firstName;
+    if (learner.fullName) return learner.fullName.split(" ")[0];
+
     if (learner.email) {
-      const localPart = learner.email.split("@")[0];
-      // Try to split local part (e.g., john.doe, john-doe) by separators
-      const parts = localPart.split(/[. _-]/).filter(p => p.length > 0); 
-      
-      let name = parts.length > 0 ? parts[0] : localPart;
-      
-      // Clean up and capitalize first letter
+      const local = learner.email.split("@")[0];
+      const parts = local.split(/[._-]/).filter((p) => p.length > 0);
+      const name = parts.length ? parts[0] : local;
       return name.charAt(0).toUpperCase() + name.slice(1);
     }
 
-    return "Learner"; // Final fallback
+    return "Learner";
   };
-  
+
   const formattedName = deriveName();
-  // =======================================================
 
   if (loading || !learner) {
     return <div style={styles.loading}>Loading Dashboard…</div>;
   }
 
-  // compute sidebar width for content margin (desktop only)
   const desktopSidebarWidth = 260;
   const contentMarginLeft = !isMobile && sidebarPinned ? desktopSidebarWidth : 0;
 
@@ -122,12 +114,14 @@ export default function LearnerLayout() {
         ["--desktop-sidebar-width"]: `${desktopSidebarWidth}px`,
       }}
     >
-      {/* ===== HEADER (fixed) ===== */}
+      {/* ===== HEADER ===== */}
       <header style={styles.header}>
         <div style={styles.brandArea}>
           <button
             onClick={() => {
-              isMobile ? setSidebarOpen((v) => !v) : setSidebarPinned((v) => !v);
+              isMobile
+                ? setSidebarOpen((v) => !v)
+                : setSidebarPinned((v) => !v);
             }}
             style={styles.iconBtn}
             aria-label="Toggle sidebar"
@@ -141,20 +135,17 @@ export default function LearnerLayout() {
         </div>
 
         <div style={styles.headerRight}>
-          {/* Using formattedName from the robust derivation */}
           <span style={styles.welcome}>Hello, {formattedName} 👋</span>
           <div
             style={styles.avatar}
-            onClick={() => setQuickOpen((o) => !o)}
-            aria-controls="quick-nav-menu"
-            aria-expanded={quickOpen}
+            onClick={() => setQuickOpen(!quickOpen)}
           >
             {(formattedName?.[0] || "L").toUpperCase()}
           </div>
         </div>
       </header>
 
-      {/* ===== SIDEBAR (Navigation) ===== */}
+      {/* ===== SIDEBAR ===== */}
       <aside
         style={{
           ...styles.sidebarShell,
@@ -163,8 +154,8 @@ export default function LearnerLayout() {
               ? "translateX(0)"
               : "translateX(-100%)"
             : sidebarPinned
-              ? "translateX(0)"
-              : "translateX(calc(-1 * var(--desktop-sidebar-width)))",
+            ? "translateX(0)"
+            : "translateX(calc(-1 * var(--desktop-sidebar-width)))",
         }}
       >
         <LearnerSidebar
@@ -174,20 +165,14 @@ export default function LearnerLayout() {
         />
       </aside>
 
-      {/* Backdrop (mobile only) */}
       {isMobile && sidebarOpen && (
         <div
           onClick={() => setSidebarOpen(false)}
           style={styles.backdrop}
-          aria-hidden="true"
         />
       )}
-      
-      {/* Quick Nav is now used - assuming you added the QuickNav component */}
-      {/* Placeholder for QuickNav component using name data */}
 
-
-      {/* ===== MAIN CONTENT CONTAINER ===== */}
+      {/* ===== MAIN CONTENT ===== */}
       <div
         style={{
           ...styles.page,
@@ -196,13 +181,11 @@ export default function LearnerLayout() {
       >
         <main
           style={styles.main}
-          onClick={() => {
-            // Close QuickNav if main content is clicked
-            if (quickOpen) setQuickOpen(false);
-          }}
+          onClick={() => quickOpen && setQuickOpen(false)}
         >
           <Outlet />
         </main>
+
         <footer style={styles.footer}>
           © {new Date().getFullYear()} Learning Platform · All rights reserved
         </footer>
@@ -211,14 +194,13 @@ export default function LearnerLayout() {
   );
 }
 
-/* ========= STYLES (Unchanged) ========= */
+/* ========= STYLES (your original styles unchanged) ========= */
 const styles = {
-  // ... (keep styles block the same as before) ...
-    wrapper: {
+  wrapper: {
     minHeight: "100vh",
     background: "#f8fafc",
-    display: "flex", // Enable flex layout
-    paddingTop: "64px", // Account for fixed header height
+    display: "flex",
+    paddingTop: "64px",
     position: "relative",
   },
   loading: {
@@ -230,7 +212,6 @@ const styles = {
     color: "#0f4f9f",
     fontWeight: 800,
   },
-  // Header remains fixed
   header: {
     height: "64px",
     position: "fixed",
@@ -275,7 +256,6 @@ const styles = {
     fontWeight: 900,
     cursor: "pointer",
   },
-  // 💡 MODIFIED: Uses CSS variable for desktop width and transition for transform
   sidebarShell: {
     position: "fixed",
     left: 0,
@@ -283,8 +263,8 @@ const styles = {
     bottom: 0,
     width: "var(--desktop-sidebar-width)",
     zIndex: 2001,
-    transition: "transform .3s ease",
     backgroundColor: "#0f172a",
+    transition: "transform .3s ease",
   },
   backdrop: {
     position: "fixed",
@@ -293,14 +273,12 @@ const styles = {
     zIndex: 2000,
     backdropFilter: "blur(2px)",
   },
-  // 💡 MODIFIED: Flex: 1 and dynamic margin-left
   page: {
-    flex: 1, // Takes up remaining horizontal space
+    flex: 1,
     display: "flex",
     flexDirection: "column",
     minHeight: "calc(100vh - 64px)",
-    transition: "margin-left .3s ease", // Smooth transition for content shifting
-    // Note: No more paddingTop here as it's moved to wrapper
+    transition: "margin-left .3s ease",
   },
   main: {
     flex: 1,

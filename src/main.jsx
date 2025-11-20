@@ -14,7 +14,7 @@ if ("scrollRestoration" in window.history) {
 createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <AppStateProvider>
-      <BrowserRouter>
+      <BrowserRouter basename="/LMSTalentMindsUI/">
         <ScrollToTop /> {/* ✅ inside router but outside <App /> */}
         <App />
       </BrowserRouter>

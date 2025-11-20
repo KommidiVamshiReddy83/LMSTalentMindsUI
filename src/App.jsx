@@ -22,6 +22,7 @@ import Support from "./pages/HeaderPages/Support";
 import BecomeMentorPage from "./pages/BecomeMentorPage";
 import PlacementReport from "./components/publicLayout/PlacementReport.jsx";
 
+
 // Hero Banner Subpages
 import ExplorePrograms from "./pages/HeroBannerSlider/ExplorePrograms";
 import JoinNow from "./pages/HeroBannerSlider/JoinNow";
@@ -79,6 +80,7 @@ import MentorRequests from "./modules/admin/pages/MentorRequests";
 import Reports from "./modules/admin/pages/Reports";
 import AdminNotifications from "./modules/admin/pages/Notifications";
 import AdminSettings from "./modules/admin/pages/Settings";
+import SsoSuccess from "./pages/SsoSuccess.jsx";
 
 /* ============ 404 PAGE ============ */
 const NotFoundPage = () => (
@@ -189,6 +191,7 @@ export default function App() {
         <Route path="notifications" element={<AdminNotifications />} />
         <Route path="settings" element={<AdminSettings />} />
       </Route>
+      <Route path="/sso-success" element={<SsoSuccess/>}/>
 
       {/* ❌ 404 PAGE */}
       <Route path="*" element={<NotFoundPage />} />
